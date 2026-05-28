@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cantus mark">
+  <g fill="none" stroke="#C0562F" stroke-linecap="round">
+    <circle cx="256" cy="256" r="150" stroke-width="30" stroke-dasharray="659.73 282.74" stroke-dashoffset="-141.37"/>
+    <circle cx="256" cy="256" r="104" stroke-width="28" stroke-dasharray="457.42 196.04" stroke-dashoffset="-98.02"/>
+    <circle cx="256" cy="256" r="58" stroke-width="26" stroke-dasharray="255.10 109.33" stroke-dashoffset="-54.66"/>
+  </g>
+  <circle cx="256" cy="256" r="22" fill="#C0562F"/>
+</svg>

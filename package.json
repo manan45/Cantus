@@ -8,7 +8,10 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "check": "tsc --noEmit && cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings"
+    "check": "tsc --noEmit && cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
+    "release": "npm version patch -m \"chore(release): v%s\" && git push --follow-tags",
+    "release:minor": "npm version minor -m \"chore(release): v%s\" && git push --follow-tags",
+    "release:major": "npm version major -m \"chore(release): v%s\" && git push --follow-tags"
   },
   "dependencies": {
     "react": "^19.1.0",
