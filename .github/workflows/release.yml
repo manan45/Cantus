@@ -1,5 +1,8 @@
 name: Release
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 # Tag a version to build installers and open a draft GitHub Release:
 #   git tag v0.1.0 && git push origin v0.1.0
 # Builds are unsigned until Apple signing secrets (APPLE_CERTIFICATE, etc.) are added.
