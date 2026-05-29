@@ -1,5 +1,8 @@
 name: Claude Code Review
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
