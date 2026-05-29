@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+agent-host/node_modules/
 
 # Frontend build
 dist/
@@ -18,3 +19,5 @@ src-tauri/target/
 
 IMPLEMENTATION_PLAN.md
 prd.md
+# lazygit sidecar (fetched via scripts/fetch-lazygit.sh)
+src-tauri/binaries/

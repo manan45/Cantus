@@ -33,9 +33,22 @@ Cantus is a **Claude-first, Tauri-based desktop coding environment**. One thesis
 | Code editor | Monaco (MIT) | Frontend |
 | Terminal | xterm.js + backend-spawned PTY | Frontend + Backend |
 | Version control | libgit2 via the `git2` crate | Backend |
-| AI agent | Claude Agent SDK (subprocess) | Backend ⇄ both |
+| AI chat (current) | Embedded `claude` CLI in a PTY; sessions from Claude Code's own store | Frontend + Backend |
+| AI agent (dormant) | Claude Agent SDK subprocess (`agent.rs` + `ChatPane.tsx`) — built, not mounted | Backend ⇄ both |
 | Local store | SQLite | Backend |
-| Coordination | command palette, shared state, keybindings, theme | Frontend |
+| Coordination | command palette, shared state, keybindings, theme, top bar | Frontend |
+
+## Claude integration — current implementation (post Phase-A)
+
+The product pivoted the chat experience to the **real `claude` CLI**, not the Agent SDK:
+
+- **Chat = embedded `claude` CLI in a PTY.** The right pane (`ChatSessions.tsx`) runs `claude` in a tabbed terminal. `pty_spawn(cols, rows, program?, args?)` takes args so a tab can spawn `claude --resume <id>`.
+- **Sessions = Claude Code's own store.** `list_sessions` (`sessions.rs`) reads `~/.claude/projects/<cwd with / and . → ->/*.jsonl` for the open project: id (file stem), title (`aiTitle` line, else first user line), mtime (epoch ms), gitBranch, message count. The pane lands on this history; a row spawns `claude --resume <id>`; `+` spawns a fresh `claude`.
+- **Skills / Agents / Workflows / Sessions = an app-wide top bar** (`TopBar.tsx`). `list_claude_assets` (`assets.rs`) scans `~/.claude/{skills,agents,workflows}` (user) and `<project>/.claude/{…}` (project). "Run" prefills an invocation into the active chat PTY (`/skill `, "Use the … agent to ", "Run the … workflow"). The top views overlay the workspace (`.workspace-overlay`) so panes/PTYs stay alive.
+- **Multiple terminals + multiple chats** are just multiple PTYs in a reusable `TerminalTabs.tsx`; the backend PTY registry (`HashMap<u32, …>`) already multiplexed by id.
+- **Read-only `~/.claude` exception:** `sessions.rs`/`assets.rs` read the user's own Claude data *outside* the project sandbox. This is a deliberate, strictly **read-only** exception to rule 5 — never write under `~/.claude`, don't route these through `resolve_scoped`.
+- **The Agent SDK path is dormant**, not deleted: `agent.rs`, `ChatPane.tsx`, the `agent_*` commands, `propose_edit → Monaco accept/reject`, and the `messages`/`session_summaries` SQLite tables exist but are not wired into the live UI. Its `propose_edit` diff flow is the basis for any future "surface Claude's edits like Cursor" work.
+- **Edits made by the CLI are NOT yet surfaced.** When `claude` writes a file, the FS watcher refreshes the tree and flags *already-open* buffers as externally changed — it does not auto-open the file or show a diff. Cursor-like edit surfacing is unbuilt (Phase B).
 
 ## The five rules (these override convenience)
 
@@ -71,11 +84,19 @@ Cantus is greenfield — write it lean and keep it lean. Every agent follows thi
 - `agent_events(id, project_id, agent_id, task_id, kind, content, created_at)`
 - `session_summaries(id, project_id, session_id, summary, created_at)`
 
-## Scope boundary — Phase 1 MVP only
+## Scope boundary
 
-**In:** Tauri shell (macOS ARM, single signed binary, zero setup) · four-pane layout · open any local folder · Monaco editing + syntax highlighting + ≥1 language server (Python first) · terminal via backend PTY · basic git (status/stage/commit + inline diff) · one agent that reads/edits open files with accept/reject diffs and selection-awareness · SQLite persistence with summary re-seed · command palette + baseline keybindings.
+**Phase 1 MVP (shipped):** Tauri shell (macOS ARM) · four-pane layout · open any local folder · Monaco editing + syntax highlighting + ≥1 language server (Python first) · terminal via backend PTY · basic git (status/stage/commit + inline diff) · SQLite persistence · command palette + baseline keybindings.
 
-**Out (do not build in Phase 1):** debugging/DAP, multiple agents, skills-manager UI, workflow management, multi-project, vector retrieval, Windows/Linux. These are Phase 2/3.
+**Phase A (shipped):** multiple shell terminals in tabs (bottom) · embedded `claude` CLI chat with per-project session history + new/resume tabs (right) · app-wide top bar — Skills / Agents / Workflows / Sessions — browse + launch into the active chat. See "Claude integration" above.
+
+**Phase B (shipped):**
+- **Edit surfacing** — the FS watcher feeds a `ChangesStrip` (store `agentChanges`) listing files changed by the CLI (filtered to git-tracked, editor saves excluded via buffer hash); clicking opens the diff, and the diff auto-reveals while a chat is active but never yanks you out of the file you're editing. `git diff` uses `include_untracked` + `show_untracked_content` so newly-created files diff as all-added.
+- **Orchestrator tab** (`OrchestratorView.tsx`, 5th top-bar view) — two-step: **(1) Prepare** spawns one `claude` session seeded to create/modify the project's `.claude/{agents,skills,workflows}` for the goal (modify-not-duplicate); **(2) Start orchestration** (gated on prepared) fans out one worker `claude` PTY per task, each told to use those assets. Workers seeded race-free via a positional prompt arg (`claude "<prompt>"`), watchable as `TerminalTabs`.
+
+**Phase B (deeper, not yet built):** parent-plans-then-dispatches (auto-derive tasks), real worker status (Octogent's `todo.md`/tentacle model — workers report progress to a file the UI reads), cross-worker coordination.
+
+**Still out:** debugging/DAP, multi-project, vector retrieval, Windows/Linux.
 
 ## Stack
 

@@ -8,23 +8,34 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "setup": "node scripts/dev-symlink.mjs",
     "check": "tsc --noEmit && cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
     "release": "npm version patch -m \"chore(release): v%s\" && git push --follow-tags",
     "release:minor": "npm version minor -m \"chore(release): v%s\" && git push --follow-tags",
     "release:major": "npm version major -m \"chore(release): v%s\" && git push --follow-tags"
   },
   "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@monaco-editor/react": "^4.7.0",
+    "@tanstack/react-virtual": "^3.13.26",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "monaco-editor": "^0.55.1",
+    "monaco-languageclient": "^10.7.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-resizable-panels": "^2.1.7",
-    "@tauri-apps/api": "^2"
+    "vscode-jsonrpc": "^8.2.1",
+    "vscode-languageserver-protocol": "^3.17.5"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "@tauri-apps/cli": "^2"
+    "vite": "^7.0.4"
   }
 }
