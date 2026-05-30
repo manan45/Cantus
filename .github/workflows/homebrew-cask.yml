@@ -1,0 +1,54 @@
+name: Update Homebrew cask
+
+# When a GitHub Release is published, sync the cask in manan45/homebrew-cantus
+# to the new version and DMG checksum so `brew install --cask cantus` tracks it.
+# The release stays a manual gate (tauri-action opens a draft; you publish it).
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  update-cask:
+    if: ${{ !github.event.release.prerelease && startsWith(github.event.release.tag_name, 'v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download DMG and compute checksum
+        id: meta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          version="${TAG#v}"
+          asset="Cantus_${version}_aarch64.dmg"
+          gh release download "$TAG" --repo "$REPO" --pattern "$asset" --dir "$RUNNER_TEMP"
+          sha=$(sha256sum "$RUNNER_TEMP/$asset" | cut -d' ' -f1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha256=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tap
+        uses: actions/checkout@v4
+        with:
+          repository: manan45/homebrew-cantus
+          ssh-key: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+
+      - name: Update and push cask
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          SHA256: ${{ steps.meta.outputs.sha256 }}
+        run: |
+          cask="Casks/cantus.rb"
+          sed -i -E "s|^  version \".*\"|  version \"${VERSION}\"|" "$cask"
+          sed -i -E "s|^  sha256 \".*\"|  sha256 \"${SHA256}\"|" "$cask"
+          if git diff --quiet; then
+            echo "Cask already at ${VERSION}; nothing to do."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "cantus ${VERSION}"
+          git push
