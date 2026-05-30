@@ -24,7 +24,7 @@
     "monaco-editor": "^0.55.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-resizable-panels": "^2.1.7"
+    "react-resizable-panels": "^4.11.2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
