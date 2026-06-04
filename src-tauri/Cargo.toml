@@ -24,6 +24,6 @@ notify = "6"
 tokio = { version = "1", features = ["sync"] }
 portable-pty = "0.8"
 base64 = "0.22"
-sysinfo = "0.33"
+sysinfo = "0.39"
 git2 = "0.19"
 
