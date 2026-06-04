@@ -25,5 +25,5 @@ tokio = { version = "1", features = ["sync"] }
 portable-pty = "0.8"
 base64 = "0.22"
 sysinfo = "0.33"
-git2 = "0.19"
+git2 = "0.21"
 
